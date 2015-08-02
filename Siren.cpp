@@ -12,7 +12,7 @@ const int maxn=25;
 const int dx[4]={-1,0,1,0};
 const int dy[4]={0,1,0,-1};
 bool invalid[maxn][maxn];
-int cnt[maxn][maxn], now = 0;
+ 
 struct point
 {
 	int x,y;
@@ -80,17 +80,7 @@ int Rand(int p)   //随机生成一个0到p的数字
 {
 	return rand()*rand()*rand()%p;
 }
-
-int countArea(int x, int y) {
-	int ans = 1, x1, y1;
-	cnt[x][y] = now;
-	for (int k = 0; k < 4; k++) {
-		x1 = x + dx[k], y1 = y + dy[k];
-		if (x1 > n || y1 > m || x1 < 1 || y1 < 1 || cnt[x1][y1] == now || invalid[x1][y1] || isInBody(x1, y1)) continue;
-		ans += countArea(x1, y1);
-	}
-	return ans;
-}
+ 
 int main()
 {
 	memset(invalid,0,sizeof(invalid));
@@ -145,35 +135,17 @@ int main()
 		deleteEnd(0);
 		deleteEnd(1);
 	}
-	
-	int territory[5];
-	for (int k=0;k<4;k++) {
-		if (validDirection(0,k)) {
+ 
+	for (int k=0;k<4;k++)
+		if (validDirection(0,k))
 			possibleDire[posCount++]=k;
-			point p = *(snake[0].begin());
-			int x = p.x + dx[k];
-			int y = p.y + dy[k];
-			now++;
-			territory[posCount - 1] = countArea(x, y);
-		}
-	}
+ 
 	srand((unsigned)time(0)+total);
-	for (int i = 0; i < posCount - 1; i++) {
-		for (int j = i + 1; j < posCount; j++) {
-			if (territory[i] < territory[j]) {
-				swap(territory[i], territory[j]);
-				swap(possibleDire[i], possibleDire[j]);
-			}
-		}
-	}
+ 
 	//随机做出一个决策
 	Json::Value ret;
-	//ret["response"]["direction"]=possibleDire[0];
-	int pos2 = 1;
-	while (pos2 < posCount && territory[pos2 - 1] == territory[pos2]) {
-		pos2++;
-	}
-	ret["response"]["direction"]=possibleDire[rand()%pos2];
+	ret["response"]["direction"]=possibleDire[rand()%posCount];
+ 
 	Json::FastWriter writer;
 	cout<<writer.write(ret)<<endl;
  
