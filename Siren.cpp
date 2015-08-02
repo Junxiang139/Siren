@@ -1,3 +1,8 @@
+/*
+A normal Siren has low IQ.
+She can only keep her head away from those rocks so she won't fall into the sea.
+*/
+
 #include<cstdio>
 #include<cstdlib>
 #include<cstring>
