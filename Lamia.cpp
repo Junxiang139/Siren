@@ -122,7 +122,7 @@ int main() {
 	int territory[5];
 	for (int k = 0; k < 4; k++) {
 		if (validDirection(0, k)) {
-			possibleDire[posCount++]=k;
+			possibleDire[posCount++] = k;
 			point p = *(snake[0].begin());
 			int x = p.x + dx[k];
 			int y = p.y + dy[k];
