@@ -1,3 +1,7 @@
+/*
+A Lamia is far more clever from a normal Siren.
+She would try to go to somewhere more wide, so her kind always has more territory.
+*/
 #include <ctime>
 #include <cstdio>
 #include <cstdlib>
