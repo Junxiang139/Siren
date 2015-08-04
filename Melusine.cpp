@@ -2,6 +2,7 @@
 A Melusine can predict future.
 Yet her futures are only something random. Though they may make her stronger.
 Stronger enough to kill her fellow Siren.
+Now she knows to count area like a Siren.
 */
 #include <ctime>
 #include <cstdio>
@@ -80,18 +81,18 @@ bool validDirection(int id,int k) {
 int Rand(int p) {
 	return rand() * rand() * rand() % p;
 }
-/*
-int countArea(int x, int y) {
+
+int countArea(int x, int y, int id) {
 	int ans = 1, x1, y1;
 	cnt[x][y] = now;
 	for (int k = 0; k < 4; k++) {
 		x1 = x + dx[k], y1 = y + dy[k];
-		if (x1 > n || y1 > m || x1 < 1 || y1 < 1 || cnt[x1][y1] == now || invalid[x1][y1] || isInBody(x1, y1)) continue;
-		ans += countArea(x1, y1);
+		if (x1 > n || y1 > m || x1 < 1 || y1 < 1 || cnt[x1][y1] == now || invalid[x1][y1] || isInBody(x1, y1, id)) continue;
+		ans += countArea(x1, y1, id);
 	}
 	return ans;
 }
-*/
+
 int dfs1(int x, int y, int z);
 int dfs2(int x, int y, int z);
 
@@ -101,12 +102,12 @@ int dfs1(int x, int y, int z) {
 	if (!whetherGrow(allstep + z - 1)) {
 		snake[0].pop_back();
 	}
-	int ans = 0;
+	int ans = 1000000000;
 	point p = *(snake[1].begin());
 	for (int k = 0; k < 4; k++) {
 		int x1 = p.x + dx[k];
 		int y1 = p.y + dy[k];
-		ans += dfs2(x1, y1, z);
+		ans = min(ans, dfs2(x1, y1, z));
 	}
 	if (!whetherGrow(allstep + z - 1)) {
 		snake[0].push_back(p1);
@@ -130,27 +131,48 @@ int dfs2(int x, int y, int z) {
 	x1 = p.x, y1 = p.y;
 	if (x1 > n || y1 > m || x1 < 1 || y1 < 1 || invalid[x1][y1] || isInBody(x1, y1, 1)) s2 = 0;
 	else s2 = 1;
-	int ans = 0;
+	int ans = -1000000000;
+	int doit = 1;
 	if (s1 == 1 && s2 == 1 && z == 5) {
-		ans = 1;
+		ans = 17;
 	} else if (s1 == 1 && s2 == 1) {
 		p = *(snake[0].begin());
 		for (int k = 0; k < 4; k++) {
 			int x1 = p.x + dx[k];
 			int y1 = p.y + dy[k];
-			ans += dfs1(x1, y1, z + 1);
+			ans = max(ans, dfs1(x1, y1, z + 1));
 		}
+		doit = 0;
 	} else if (s1 == 1 && s2 == 0) {
-		ans = 2;
+		ans = 35;
 	} else if (s1 == 0 && s2 == 1) {
-		ans = 0;
+		ans = -35;
 	} else if (s1 == 0 && s2 == 0) {
-		ans = 1;
+		ans = 13;
 	}
+	int v1 = 0, v2 = 0;
+	
+	if (doit == 1) {
+		p = *(snake[0].begin());
+		x1 = p.x, y1 = p.y, now++;
+		v1 = countArea(x1, y1, 0);
+	
+		p = *(snake[1].begin());
+		x1 = p.x, y1 = p.y, now++;
+		v2 = countArea(x1, y1, 1);
+	
+		ans *= (10 - z);
+		ans += (v1 - v2);
+	
+		p = *(snake[0].begin());
+		x1 = p.x, y1 = p.y;
+		if (x1 == 1 || x1 == n || y1 == 1 || y1 == m) ans -= 20;
+		ans -= abs(x1 - (n >> 1)) + abs(y1 - (m >> 1));
+	}
+	snake[1].pop_front();
 	if (!whetherGrow(allstep + z - 1)) {
 		snake[1].push_back(p1);
 	}
-	snake[1].pop_front();
 	return ans;
 }
 int main() {
@@ -161,21 +183,21 @@ int main() {
 	Json::Reader reader;
 	Json::Value input;
 	reader.parse(str,input);
-	n=input["requests"][(Json::Value::UInt) 0]["height"].asInt();
-	m=input["requests"][(Json::Value::UInt) 0]["width"].asInt();
-	int x=input["requests"][(Json::Value::UInt) 0]["x"].asInt();
-	if (x==1) {
+	n = input["requests"][(Json::Value::UInt) 0]["height"].asInt();
+	m = input["requests"][(Json::Value::UInt) 0]["width"].asInt();
+	int x = input["requests"][(Json::Value::UInt) 0]["x"].asInt();
+	if (x == 1) {
 		snake[0].push_front(point(1, 1));
 		snake[1].push_front(point(n, m));
 	} else {
 		snake[1].push_front(point(1, 1));
 		snake[0].push_front(point(n, m));
 	}
-	int obsCount=input["requests"][(Json::Value::UInt) 0]["obstacle"].size();
+	int obsCount = input["requests"][(Json::Value::UInt) 0]["obstacle"].size();
 	for (int i = 0; i < obsCount; i++) {
-		int ox=input["requests"][(Json::Value::UInt) 0]["obstacle"][(Json::Value::UInt) i]["x"].asInt();
-		int oy=input["requests"][(Json::Value::UInt) 0]["obstacle"][(Json::Value::UInt) i]["y"].asInt();
-		invalid[ox][oy]=1;
+		int ox = input["requests"][(Json::Value::UInt) 0]["obstacle"][(Json::Value::UInt) i]["x"].asInt();
+		int oy = input["requests"][(Json::Value::UInt) 0]["obstacle"][(Json::Value::UInt) i]["y"].asInt();
+		invalid[ox][oy] = 1;
 	}
 	int total = input["responses"].size();
 	int dire;
