@@ -15,10 +15,9 @@ Now she knows to count area like a Siren.
 using namespace std;
 int n, m;
 const int maxn = 25;
-const int dx[4]={-1, 0, 1, 0};
-const int dy[4]={0, 1, 0, -1};
+int dx[4] = {-1, 0, 1, 0};
+int dy[4] = {0, 1, 0, -1};
 bool invalid[maxn][maxn];
-int cnt[maxn][maxn], now = 0;
 struct point {
 	int x, y;
 	point(int _x, int _y) {
@@ -30,6 +29,8 @@ list<point> snake[2];
 int possibleDire[10];
 int posCount;
 int allstep = 0;
+int vis[55][55], ax[25005], ay[25005], vc = 0;
+int lim = 8;
 bool whetherGrow(int num) {
 	if (num <= 9) return true;
 	if ((num - 9) % 3 == 0) return true;
@@ -83,12 +84,21 @@ int Rand(int p) {
 }
 
 int countArea(int x, int y, int id) {
-	int ans = 1, x1, y1;
-	cnt[x][y] = now;
-	for (int k = 0; k < 4; k++) {
-		x1 = x + dx[k], y1 = y + dy[k];
-		if (x1 > n || y1 > m || x1 < 1 || y1 < 1 || cnt[x1][y1] == now || invalid[x1][y1] || isInBody(x1, y1, id)) continue;
-		ans += countArea(x1, y1, id);
+	vc++;
+	int ans = 1, h = 0, t = 1, x1, y1;
+	ax[1] = x, ay[1] = y;
+	vis[x][y] = vc;
+	while (h < t) {
+		h++;
+		x = ax[h], y = ay[h];
+		for (int k = 0; k < 4; k++) {
+			x1 = x + dx[k], y1 = y + dy[k];
+			if (x1 > n || y1 > m || x1 < 1 || y1 < 1 || vis[x1][y1] == vc || invalid[x1][y1] || isInBody(x1, y1, id)) continue;
+			ans++;
+			t++;
+			vis[x1][y1] = vc;
+			ax[t] = x1, ay[t] = y1;
+		}
 	}
 	return ans;
 }
@@ -133,32 +143,36 @@ int dfs2(int x, int y, int z) {
 	else s2 = 1;
 	int ans = -1000000000;
 	int doit = 1;
-	if (s1 == 1 && s2 == 1 && z == 5) {
-		ans = 17;
+	if (s1 == 1 && s2 == 1 && z == lim) {
+		ans = 11;
 	} else if (s1 == 1 && s2 == 1) {
 		p = *(snake[0].begin());
-		for (int k = 0; k < 4; k++) {
-			int x1 = p.x + dx[k];
-			int y1 = p.y + dy[k];
-			ans = max(ans, dfs1(x1, y1, z + 1));
+		if (double(clock())/double(CLOCKS_PER_SEC) > 0.9) {
+			ans = 11;
+		} else {
+			for (int k = 0; k < 4; k++) {
+				int x1 = p.x + dx[k];
+				int y1 = p.y + dy[k];
+				ans = max(ans, dfs1(x1, y1, z + 1));
+			}
+			doit = 0;
 		}
-		doit = 0;
 	} else if (s1 == 1 && s2 == 0) {
 		ans = 35;
 	} else if (s1 == 0 && s2 == 1) {
-		ans = -35;
+		ans = -25;
 	} else if (s1 == 0 && s2 == 0) {
-		ans = 13;
+		ans = 9;
 	}
 	int v1 = 0, v2 = 0;
 	
 	if (doit == 1) {
 		p = *(snake[0].begin());
-		x1 = p.x, y1 = p.y, now++;
+		x1 = p.x, y1 = p.y;
 		v1 = countArea(x1, y1, 0);
 	
 		p = *(snake[1].begin());
-		x1 = p.x, y1 = p.y, now++;
+		x1 = p.x, y1 = p.y;
 		v2 = countArea(x1, y1, 1);
 	
 		ans *= (10 - z);
@@ -185,15 +199,28 @@ int main() {
 	reader.parse(str,input);
 	n = input["requests"][(Json::Value::UInt) 0]["height"].asInt();
 	m = input["requests"][(Json::Value::UInt) 0]["width"].asInt();
+	int sum = n * m;
 	int x = input["requests"][(Json::Value::UInt) 0]["x"].asInt();
+	int ct[4], tc[4];
+//int dx[4] = {-1, 0, 1, 0};
+//int dy[4] = {0, 1, 0, -1};
 	if (x == 1) {
 		snake[0].push_front(point(1, 1));
 		snake[1].push_front(point(n, m));
+		dx[0] = 0, dx[1] = 1, dx[2] = 0, dx[3] = -1;
+		dy[0] = 1, dy[1] = 0, dy[2] = -1, dy[3] = 0;
+		ct[0] = 1, ct[1] = 2, ct[2] = 3, ct[3] = 0;
+		tc[0] = 3, tc[1] = 0, tc[2] = 1, tc[3] = 2;
 	} else {
 		snake[1].push_front(point(1, 1));
 		snake[0].push_front(point(n, m));
+		dx[0] = 0, dx[1] = -1, dx[2] = 0, dx[3] = 1;
+		dy[0] = -1, dy[1] = 0, dy[2] = 1, dy[3] = 0;
+		ct[0] = 3, ct[1] = 0, ct[2] = 1, ct[3] = 2;
+		tc[0] = 1, tc[1] = 2, tc[2] = 3, tc[3] = 0;
 	}
 	int obsCount = input["requests"][(Json::Value::UInt) 0]["obstacle"].size();
+	sum -= obsCount;
 	for (int i = 0; i < obsCount; i++) {
 		int ox = input["requests"][(Json::Value::UInt) 0]["obstacle"][(Json::Value::UInt) i]["x"].asInt();
 		int oy = input["requests"][(Json::Value::UInt) 0]["obstacle"][(Json::Value::UInt) i]["y"].asInt();
@@ -203,9 +230,33 @@ int main() {
 	int dire;
 	for (int i = 0; i < total; i++) {
 		dire = input["responses"][i]["direction"].asInt();
-		move(0, dire, i);
-		dire=input["requests"][i + 1]["direction"].asInt();
-		move(1, dire, i);	
+		move(0, tc[dire], i);
+		dire = input["requests"][i + 1]["direction"].asInt();
+		move(1, tc[dire], i);
+		if (whetherGrow(i)) {
+			sum--;
+		}
+	}
+	if (sum > 97) {
+		lim = 5;
+	} else if (sum > 77) {
+		lim = 6;
+	} else if (sum > 67) {
+		lim = 7;
+	} else if (sum > 57) {
+		lim = 8;
+	} else if (sum > 47) {
+		lim = 9;
+	} else if (sum > 41) {
+		lim = 10;
+	} else if (sum > 35) {
+		lim = 11;
+	} else if (sum > 27) {
+		lim = 12;
+	} else if (sum > 21) {
+		lim = 13;
+	} else {
+		lim = 14;
 	}
 	/*
 	
@@ -236,7 +287,7 @@ int main() {
 	while (pos2 < posCount && territory[pos2 - 1] == territory[pos2]) {
 		pos2++;
 	}
-	ret["response"]["direction"] = possibleDire[rand() % pos2];
+	ret["response"]["direction"] = ct[possibleDire[rand() % pos2]];
 	Json::FastWriter writer;
 	cout << writer.write(ret) << endl;
 	return 0;
